@@ -1,9 +1,16 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Detail from './pages/Detail';
-import Admin from './pages/Admin'; 
+import Admin from './pages/Admin';
 import Login from './pages/Login';
+
+const isAuth = localStorage.getItem('isAuth') === 'true';
+
+// Component bảo vệ cho Admin
+function ProtectedRoute({ children }) {
+  if (!isAuth) return <Navigate to="/login" replace />;
+  return children;
+}
 
 function App() {
   return (
@@ -11,10 +18,15 @@ function App() {
       <Navbar />
       <div className="container">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/detail/:id" element={<Detail />} />
-          <Route path="/admin" element={<Admin />} /> 
-          <Route path="/login" element={<Login />} />
+          {/* Nếu chưa Login thì ở Home, nếu Login rồi thì bắt buộc ở Admin */}
+          <Route path="/" element={isAuth ? <Navigate to="/admin" replace /> : <Home />} />
+          <Route path="/login" element={isAuth ? <Navigate to="/admin" replace /> : <Login />} />
+          
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          } />
         </Routes>
       </div>
     </Router>

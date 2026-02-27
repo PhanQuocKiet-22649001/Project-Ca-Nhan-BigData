@@ -1,211 +1,131 @@
 import { useState } from 'react';
 import '../styles/admin.css';
 
-const initialItems = [
-  { id: 1, name: 'Classic Black Sneaker', price: '1,500,000' },
-  { id: 2, name: 'White Runner Pro', price: '2,200,000' },
+const MOCK_CATEGORIES = [
+  { id: 'C01', name: 'Giày Thể Thao', slug: 'giay-the-thao', created_by: 'admin_1', created_at: '2026-02-28', status: true },
+  { id: 'C02', name: 'Giày Trẻ Em', slug: 'giay-tre-em', created_by: 'admin_2', created_at: '2026-02-25', status: false }
 ];
-
-const initialUsers = [
-  { id: 1, username: 'admin1', email: 'admin@sneaker.com', role: 'Admin' },
-  { id: 2, username: 'user_nguyen', email: 'nguyen@gmail.com', role: 'User' },
+const MOCK_USERS = [
+  { id: 'U01', uname: 'admin_vip', pass: 'hash_123abc', created_at: '2026-02-20', status: true },
+  { id: 'U02', uname: 'user_banned', pass: 'hash_456xyz', created_at: '2026-02-22', status: false }
 ];
 
 function Admin() {
-  const [activeTab, setActiveTab] = useState('items'); // 'items' hoặc 'users'
-  const [items, setItems] = useState(initialItems);
-  const [users, setUsers] = useState(initialUsers);
-  
-  // Modal states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({}); // Dùng chung cho cả user và item
+  const [tab, setTab] = useState('categories');
+  const [viewData, setViewData] = useState(null); // Cho Modal Xem full
+  const [isFormOpen, setIsFormOpen] = useState(false); // Cho Modal Thêm/Sửa
+  const [isEdit, setIsEdit] = useState(false);
 
-  const handleDelete = (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa mục này?')) {
-      if (activeTab === 'items') {
-        setItems(items.filter(item => item.id !== id));
-      } else {
-        setUsers(users.filter(user => user.id !== id));
-      }
-    }
+  const currentData = tab === 'categories' ? MOCK_CATEGORIES : MOCK_USERS;
+
+  const openForm = (editMode) => {
+    setIsEdit(editMode);
+    setIsFormOpen(true);
   };
 
-  const openModalForCreate = () => {
-    if (activeTab === 'items') {
-      setFormData({ id: Date.now(), name: '', price: '' });
-    } else {
-      setFormData({ id: Date.now(), username: '', email: '', role: 'User' });
+  const handleToggle = (action) => {
+    if (window.confirm(`Xác nhận: Bạn muốn ${action} bản ghi này?`)) {
+      alert(`Thao tác ${action} thành công!`);
     }
-    setIsEditMode(false);
-    setIsModalOpen(true);
-  };
-
-  const openModalForEdit = (data) => {
-    setFormData(data);
-    setIsEditMode(true);
-    setIsModalOpen(true);
-  };
-
-  const handleSave = () => {
-    if (activeTab === 'items') {
-      if (isEditMode) {
-        setItems(items.map(item => item.id === formData.id ? formData : item));
-      } else {
-        setItems([...items, formData]);
-      }
-    } else {
-      if (isEditMode) {
-        setUsers(users.map(user => user.id === formData.id ? formData : user));
-      } else {
-        setUsers([...users, formData]);
-      }
-    }
-    setIsModalOpen(false);
   };
 
   return (
-    <div className="admin-page">
-      <h2>Bảng Điều Khiển Quản Trị</h2>
+    <div className="page-content">
+      <h2>Trung Tâm Quản Trị Hệ Thống</h2>
       
-      {/* Tabs */}
-      <div className="admin-tabs">
-        <button 
-          className={activeTab === 'items' ? 'tab-active' : 'tab-inactive'} 
-          onClick={() => setActiveTab('items')}
-        >
-          Quản Lý Sản Phẩm
-        </button>
-        <button 
-          className={activeTab === 'users' ? 'tab-active' : 'tab-inactive'} 
-          onClick={() => setActiveTab('users')}
-        >
-          Quản Lý Người Dùng
-        </button>
+      <div className="tabs">
+        <button className={`tab ${tab === 'categories' ? 'active' : ''}`} onClick={() => setTab('categories')}>Quản Lý Danh Mục</button>
+        <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Quản Lý Người Dùng</button>
       </div>
 
-      <div className="admin-header">
-        <h3>{activeTab === 'items' ? 'Danh Sách Sản Phẩm' : 'Danh Sách Người Dùng'}</h3>
-        <button className="btn-black" onClick={openModalForCreate}>
-          + Thêm Mới {activeTab === 'items' ? 'Sản Phẩm' : 'User'}
-        </button>
+      <div className="header-actions">
+        <h3>Bảng Dữ Liệu {tab === 'categories' ? 'Danh Mục' : 'Người Dùng'} (Toàn quyền)</h3>
+        <button className="btn-black" onClick={() => openForm(false)}>+ Thêm Mới</button>
       </div>
 
-      {/* Render Bảng Dữ Liệu Tương Ứng */}
-      <table className="admin-table">
+      <table className="data-table">
         <thead>
-          {activeTab === 'items' ? (
-            <tr>
-              <th>ID</th>
-              <th>Tên Sản Phẩm</th>
-              <th>Giá</th>
-              <th>Hành Động</th>
-            </tr>
-          ) : (
-            <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Vai trò</th>
-              <th>Hành Động</th>
-            </tr>
-          )}
+          <tr>
+            <th>{tab === 'categories' ? 'Tên danh mục' : 'Tên đăng nhập'}</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
         </thead>
         <tbody>
-          {activeTab === 'items' ? (
-            items.map(item => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.name}</td>
-                <td>{item.price} VNĐ</td>
-                <td>
-                  <button className="btn-outline" onClick={() => openModalForEdit(item)}>Sửa</button>
-                  <button className="btn-outline btn-danger" onClick={() => handleDelete(item.id)}>Xóa</button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            users.map(user => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.username}</td>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
-                <td>
-                  <button className="btn-outline" onClick={() => openModalForEdit(user)}>Sửa</button>
-                  <button className="btn-outline btn-danger" onClick={() => handleDelete(user.id)}>Xóa</button>
-                </td>
-              </tr>
-            ))
-          )}
+          {currentData.map(item => (
+            <tr key={item.id}>
+              <td>{item.name || item.uname}</td>
+              <td className={item.status ? 'status-active' : 'status-inactive'}>
+                {item.status ? 'Hoạt động' : 'Đã ẩn'}
+              </td>
+              <td>
+                <button className="btn-outline" onClick={() => setViewData({ type: tab, data: item })}>Xem</button>
+                <button className="btn-outline" onClick={() => openForm(true)}>Sửa</button>
+                <button className={item.status ? "btn-outline btn-danger" : "btn-black"} onClick={() => handleToggle(item.status ? 'Ẩn' : 'Hiện')}>
+                  {item.status ? 'Ẩn' : 'Hiện'}
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
-      {/* Modal Dùng Chung Cho Create/Edit Item và User */}
-      {isModalOpen && (
+      {/* MODAL 1: XEM FULL THÔNG TIN (Chỉ Admin mới có) */}
+      {viewData && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>{isEditMode ? 'Sửa' : 'Thêm'} {activeTab === 'items' ? 'Sản Phẩm' : 'Người Dùng'}</h3>
-            
-            {/* Form Sản Phẩm */}
-            {activeTab === 'items' && (
-              <>
-                <div className="input-group">
-                  <label>Tên giày</label>
-                  <input 
-                    type="text" 
-                    value={formData.name || ''} 
-                    onChange={e => setFormData({...formData, name: e.target.value})}
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Giá</label>
-                  <input 
-                    type="text" 
-                    value={formData.price || ''} 
-                    onChange={e => setFormData({...formData, price: e.target.value})}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Form Người Dùng */}
-            {activeTab === 'users' && (
-              <>
-                <div className="input-group">
-                  <label>Username</label>
-                  <input 
-                    type="text" 
-                    value={formData.username || ''} 
-                    onChange={e => setFormData({...formData, username: e.target.value})}
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Email</label>
-                  <input 
-                    type="email" 
-                    value={formData.email || ''} 
-                    onChange={e => setFormData({...formData, email: e.target.value})}
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Vai trò</label>
-                  <select 
-                    style={{ width: '100%', padding: '10px', border: '1px solid #ccc' }}
-                    value={formData.role || 'User'} 
-                    onChange={e => setFormData({...formData, role: e.target.value})}
-                  >
-                    <option value="User">User</option>
-                    <option value="Admin">Admin</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            <div className="modal-actions">
-              <button className="btn-black" onClick={handleSave}>Lưu</button>
-              <button className="btn-outline" onClick={() => setIsModalOpen(false)}>Hủy</button>
+            <h3>Chi tiết {viewData.type === 'categories' ? 'Danh mục' : 'Người dùng'} (Chế độ Admin)</h3>
+            <div className="detail-info">
+              <p><strong>Mã ID:</strong> {viewData.data.id}</p>
+              <p><strong>{viewData.type === 'categories' ? 'Tên:' : 'Uname:'}</strong> {viewData.data.name || viewData.data.uname}</p>
+              <p><strong>Ngày tạo:</strong> {viewData.data.created_at}</p>
+              <hr style={{ margin: '15px 0', borderColor: '#eee' }} />
+              <p><strong>Trạng thái:</strong> {viewData.data.status ? 'Hoạt động (Active)' : 'Đã ẩn (Inactive)'}</p>
+              {viewData.type === 'categories' && (
+                <>
+                  <p><strong>Đường dẫn (Slug):</strong> {viewData.data.slug}</p>
+                  <p><strong>Người tạo:</strong> {viewData.data.created_by}</p>
+                </>
+              )}
+              {viewData.type === 'users' && (
+                <p><strong>Mật khẩu đã mã hóa:</strong> {viewData.data.pass}</p>
+              )}
             </div>
+            <div className="modal-actions" style={{marginTop: '20px'}}>
+              <button className="btn-black" onClick={() => setViewData(null)}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: FORM THÊM / SỬA */}
+      {isFormOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>{isEdit ? 'Cập Nhật' : 'Thêm Mới'} {tab === 'categories' ? 'Danh Mục' : 'Người Dùng'}</h3>
+            <form onSubmit={(e) => { e.preventDefault(); alert("Validate dữ liệu OK. Lưu thành công!"); setIsFormOpen(false); }}>
+              {tab === 'categories' ? (
+                <div className="input-group">
+                  <label>Tên danh mục (*)</label>
+                  <input type="text" required />
+                </div>
+              ) : (
+                 <>
+                  <div className="input-group">
+                    <label>Tên đăng nhập (Uname) (*)</label>
+                    <input type="text" disabled={isEdit} required />
+                  </div>
+                  <div className="input-group">
+                    <label>Mật khẩu (*)</label>
+                    <input type="password" required />
+                  </div>
+                </>
+              )}
+              <div className="modal-actions" style={{ marginTop: '20px' }}>
+                <button type="submit" className="btn-black">Lưu Dữ Liệu</button>
+                <button type="button" className="btn-outline" onClick={() => setIsFormOpen(false)}>Hủy</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
