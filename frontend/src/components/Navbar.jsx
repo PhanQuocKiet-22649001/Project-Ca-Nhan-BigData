@@ -2,25 +2,29 @@ import { Link } from 'react-router-dom';
 import '../styles/Navbar.css';
 
 function Navbar() {
-  const isAuth = localStorage.getItem('isAuth') === 'true';
+  // Thống nhất dùng 'token' để kiểm tra đăng nhập
+  const token = localStorage.getItem('token');
+  const isLoggedIn = !!token; 
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuth');
-    window.location.href = '/'; // Tải lại trang, tự văng về Trang chủ
+    // Xóa sạch localStorage để không còn rác
+    localStorage.clear(); 
+    // Dùng href để ép tải lại toàn bộ App, xóa sạch State cũ trong RAM
+    window.location.href = '/'; 
   };
 
   return (
     <nav className="navbar">
-      <div className="nav-brand">HỆ THỐNG CMS</div>
+      <div className="nav-brand">HỆ THỐNG MERN</div>
       <ul className="nav-links">
 
-        {/* VIEW CỦA KHÁCH CHƯA LOGIN */}
-        {!isAuth && <li><Link to="/">Trang Chủ</Link></li>}
-        {!isAuth && <li><Link to="/login">Đăng nhập</Link></li>}
-
-        {/* VIEW CỦA ADMIN ĐÃ LOGIN */}
-        {isAuth && <li><Link to="/admin">Trang Quản Trị</Link></li>}
-        {isAuth && <li><button className="btn-nav" onClick={handleLogout}>Đăng xuất</button></li>}
+        {!isLoggedIn ? (
+          <li><Link to="/login" className="btn-login">Đăng nhập</Link></li>
+        ) : (
+          <>
+            <li><button className="btn-nav" onClick={handleLogout}>Đăng xuất</button></li>
+          </>
+        )}
       </ul>
     </nav>
   );

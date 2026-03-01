@@ -1,6 +1,6 @@
 # Dependencies (Bỏ qua thư viện của cả frontend và backend)
 node_modules/
-
+backend/.env
 # Environment files (Bảo mật các biến môi trường, mật khẩu database)
 .env
 .env.local
