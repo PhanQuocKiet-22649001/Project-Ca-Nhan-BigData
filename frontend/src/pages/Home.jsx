@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
-import '../styles/home.css'; // Import file CSS mới tạo
+import { useState, useEffect, useCallback } from 'react';
+import '../styles/home.css';
 import DetailModal from '../components/DetailModal';
+import AddModal from '../components/AddModal';
 
 function Home() {
   const [tab, setTab] = useState('categories');
   const [data, setData] = useState([]);
   const [viewItem, setViewItem] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
 
-  useEffect(() => {
+  // Viết hàm loadData để dùng chung cho cả useEffect và sau khi thêm mới thành công
+  const loadData = useCallback(() => {
     const token = localStorage.getItem('token');
     const hasToken = !!token;
     setIsLoggedIn(hasToken);
@@ -17,15 +20,18 @@ function Home() {
     fetch(url, { headers: hasToken ? { 'Authorization': `Bearer ${token}` } : {} })
       .then(res => res.json())
       .then(resData => setData(resData[tab] || []))
-      .catch(err => console.error(err));
+      .catch(err => console.error("Lỗi tải dữ liệu:", err));
   }, [tab]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
     <div className="page-content">
-      {/* Banner chào mừng */}
       {isLoggedIn && (
         <div className="welcome-banner">
-          <strong> CHÀO MỪNG BẠN ĐĂNG NHẬP THÀNH CÔNG!</strong>
+          <strong>CHÀO MỪNG BẠN ĐĂNG NHẬP THÀNH CÔNG!</strong>
         </div>
       )}
 
@@ -38,7 +44,13 @@ function Home() {
           <button className={`tab ${tab === 'categories' ? 'active' : ''}`} onClick={() => setTab('categories')}>Danh Mục</button>
           <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Người Dùng</button>
         </div>
-        {isLoggedIn && <button className="btn-black btn-add-new">+ Thêm mới</button>}
+
+        {/* Nút thêm mới - Đã sửa class cho đẹp */}
+        {isLoggedIn && (
+          <button className="btn-black btn-add-new" onClick={() => setShowAdd(true)}>
+            + Thêm mới
+          </button>
+        )}
       </div>
 
       <table className="data-table">
@@ -76,6 +88,14 @@ function Home() {
         tab={tab}
         isLoggedIn={isLoggedIn}
         onClose={() => setViewItem(null)}
+      />
+
+      {/* MODAL THÊM MỚI */}
+      <AddModal
+        isOpen={showAdd}
+        onClose={() => setShowAdd(false)}
+        tab={tab}
+        onSuccess={loadData}
       />
     </div>
   );

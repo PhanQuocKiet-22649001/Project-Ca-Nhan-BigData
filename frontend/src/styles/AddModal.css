@@ -1,0 +1,40 @@
+/* Nền mờ phía sau */
+.add-modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Khung trắng ở giữa */
+.add-modal-content {
+  background: white;
+  padding: 20px;
+  width: 350px;
+  border-radius: 5px;
+}
+
+/* Các ô nhập liệu */
+.add-modal-content input {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+  display: block;
+  box-sizing: border-box; /* Giữ input không bị tràn */
+}
+
+/* Khu vực nút bấm */
+.add-modal-actions {
+  text-align: right;
+  margin-top: 15px;
+}
+
+.add-modal-actions button {
+  padding: 6px 15px;
+  margin-left: 10px;
+  cursor: pointer;
+}
