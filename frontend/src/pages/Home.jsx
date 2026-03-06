@@ -10,7 +10,9 @@ function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 
-  // Viết hàm loadData để dùng chung cho cả useEffect và sau khi thêm mới thành công
+  // LẤY ID CỦA NGƯỜI ĐANG ĐĂNG NHẬP TỪ LOCALSTORAGE
+  const currentUserId = localStorage.getItem('userId');
+
   const loadData = useCallback(() => {
     const token = localStorage.getItem('token');
     const hasToken = !!token;
@@ -26,6 +28,37 @@ function Home() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const toggleStatus = async (id, currentStatus) => {
+    // CHẶN NGAY TẠI HÀM: Nếu cố tình ẩn chính mình ở tab users
+    if (tab === 'users' && id === currentUserId) {
+      alert("Bạn không thể tự ẩn tài khoản của chính mình!");
+      return;
+    }
+
+    const confirmMsg = currentStatus ? "Bạn có chắc muốn Ẩn mục này?" : "Bạn có muốn Hiện mục này?";
+    if (!window.confirm(confirmMsg)) return;
+
+    const token = localStorage.getItem('token');
+    const endpoint = tab === 'categories' ? `categories/status/${id}` : `users/status/${id}`;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/${endpoint}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        loadData();
+      } else {
+        alert("Cập nhật trạng thái thất bại!");
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật:", error);
+    }
+  };
 
   return (
     <div className="page-content">
@@ -45,7 +78,6 @@ function Home() {
           <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Người Dùng</button>
         </div>
 
-        {/* Nút thêm mới - Đã sửa class cho đẹp */}
         {isLoggedIn && (
           <button className="btn-black btn-add-new" onClick={() => setShowAdd(true)}>
             + Thêm mới
@@ -64,39 +96,49 @@ function Home() {
           {data.length === 0 ? (
             <tr><td colSpan="3" className="empty-data-msg">Chưa có dữ liệu...</td></tr>
           ) : (
-            data.map(item => (
-              <tr key={item._id} className={item.status === false ? 'status-hidden-row' : ''}>
-                <td>{item.name || item.uname}</td>
-                <td>
-                  <button className="btn-outline" onClick={() => setViewItem(item)}>Xem</button>
-                  {isLoggedIn && (
-                    <>
-                      <button className="btn-outline" style={{ marginLeft: '5px' }}>Sửa</button>
-                      <button className="btn-outline" style={{ marginLeft: '5px' }}>Ẩn/Hiện</button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))
+            data.map(item => {
+              // BIẾN KIỂM TRA: Đây có phải là mình không?
+              const isMe = tab === 'users' && item._id === currentUserId;
+
+              return (
+                <tr key={item._id} className={item.status === false ? 'status-hidden-row' : ''}>
+                  <td>
+                    {item.name || item.uname} 
+                    {isMe && <span style={{ color: 'blue', fontSize: '12px', marginLeft: '5px' }}>(Tôi)</span>}
+                  </td>
+                  <td>
+                    <button className="btn-outline" onClick={() => setViewItem(item)}>Xem</button>
+                    {isLoggedIn && (
+                      <>
+                        <button className="btn-outline" style={{ marginLeft: '5px' }}>Sửa</button>
+                        <button 
+                          className="btn-outline"
+                          style={{
+                            marginLeft: '5px',
+                            // Nếu là mình thì cho màu xám (#ccc), nếu không thì đỏ/xanh như cũ
+                            color: isMe ? '#ccc' : (item.status ? '#dc3545' : '#28a745'),
+                            fontWeight: 'bold',
+                            cursor: isMe ? 'not-allowed' : 'pointer'
+                          }}
+                          // VÔ HIỆU HÓA NÚT BẤM NẾU LÀ CHÍNH MÌNH
+                          disabled={isMe}
+                          onClick={() => toggleStatus(item._id, item.status)}
+                          title={isMe ? "Bạn không thể tự ẩn chính mình" : ""}
+                        >
+                          {item.status ? 'Ẩn' : 'Hiện'}
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
 
-      {/* MODAL CHI TIẾT */}
-      <DetailModal
-        item={viewItem}
-        tab={tab}
-        isLoggedIn={isLoggedIn}
-        onClose={() => setViewItem(null)}
-      />
-
-      {/* MODAL THÊM MỚI */}
-      <AddModal
-        isOpen={showAdd}
-        onClose={() => setShowAdd(false)}
-        tab={tab}
-        onSuccess={loadData}
-      />
+      <DetailModal item={viewItem} tab={tab} isLoggedIn={isLoggedIn} onClose={() => setViewItem(null)} />
+      <AddModal isOpen={showAdd} onClose={() => setShowAdd(false)} tab={tab} onSuccess={loadData} />
     </div>
   );
 }

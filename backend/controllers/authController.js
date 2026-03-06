@@ -27,7 +27,10 @@ const login = async (req, res) => {
     res.json({
       message: "Đăng nhập thành công!",
       token,
-      user: { uname: user.uname }
+      user: {
+        id: user._id, // THÊM DÒNG NÀY ĐỂ FRONTEND LẤY ID
+        uname: user.uname
+      }
     });
   } catch (error) {
     res.status(500).json({ message: "Lỗi hệ thống!", error: error.message });

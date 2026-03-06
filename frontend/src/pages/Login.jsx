@@ -23,13 +23,13 @@ function Login() {
 
       if (response.ok) {
         // 3. ĐĂNG NHẬP THÀNH CÔNG
-        // Lưu Token và thông tin vào localStorage
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.user.id); // THÊM DÒNG NÀY: Lưu ID của bạn
         localStorage.setItem('adminUname', data.user.uname);
-        localStorage.setItem('isAuth', 'true'); // Giữ lại cái này cho logic App.js của bạn
-        
+        localStorage.setItem('isAuth', 'true');
+
         alert("Chào mừng Admin quay trở lại!");
-        window.location.href = '/'; // Tải lại trang chủ để nhận diện quyền Admin
+        window.location.href = '/';
       } else {
         // 4. THẤT BẠI: Hiện lỗi (Ví dụ: Sai mật khẩu)
         setError(data.message || 'Đăng nhập không thành công!');
@@ -43,26 +43,26 @@ function Login() {
     <div className="login-page">
       <div className="login-box">
         <h2>Đăng Nhập</h2>
-        
+
         {/* Hiển thị thông báo lỗi nếu có */}
         {error && <p style={{ color: '#d9534f', textAlign: 'center', marginBottom: '15px' }}>{error}</p>}
-        
+
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <label>Tên đăng nhập (uname)</label>
-            <input 
-              type="text" 
-              required 
+            <input
+              type="text"
+              required
               value={uname}
-              onChange={(e) => setUname(e.target.value)} 
+              onChange={(e) => setUname(e.target.value)}
               placeholder="Ví dụ: admin"
             />
           </div>
           <div className="input-group">
             <label>Mật khẩu (pass)</label>
-            <input 
-              type="password" 
-              required 
+            <input
+              type="password"
+              required
               value={pass}
               onChange={(e) => setPass(e.target.value)}
               placeholder="********"

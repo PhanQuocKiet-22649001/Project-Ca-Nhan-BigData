@@ -36,3 +36,28 @@ exports.addUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi Server", error: error.message });
   }
 };
+
+
+exports.toggleStatus = async (req, res) => {
+  try {
+    const { id } = req.params; // ID của user định ẩn/hiện
+    const adminId = req.user.id; // ID của chính người đang đăng nhập (lấy từ Token)
+
+    // KIỂM TRA: Nếu ID định ẩn trùng với ID người đang đăng nhập
+    if (id === adminId) {
+      return res.status(400).json({ 
+        message: "Bạn không thể tự ẩn/khóa tài khoản của chính mình!" 
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "Không tìm thấy!" });
+
+    user.status = !user.status;
+    await user.save();
+
+    res.json({ message: "Cập nhật thành công", status: user.status });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi Server", error: error.message });
+  }
+};

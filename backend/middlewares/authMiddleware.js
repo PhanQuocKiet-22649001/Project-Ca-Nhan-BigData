@@ -5,7 +5,7 @@ const identifyUser = (req, res, next) => {
 
   // 1. Kiểm tra xem Header có gửi lên không
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log("=> Không tìm thấy Header Authorization hoặc sai định dạng");
+    console.log("=> Không tìm thấy Header Authorization hoặc đã đăng xuất");
     req.isAdmin = false;
     return next();
   }

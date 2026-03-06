@@ -39,3 +39,30 @@ exports.addCategory = async (req, res) => {
         res.status(500).json({ message: "Lỗi Server", error: error.message });
     }
 };
+
+// cập nhật hiện/ẩn
+// BƯỚC 1: Đảm bảo đã import Model ở đầu file
+exports.toggleStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Tìm danh mục
+    const category = await Category.findById(id);
+    
+    if (!category) {
+      console.log("=> Không tìm thấy danh mục với ID:", id);
+      return res.status(404).json({ message: "Không tìm thấy danh mục!" });
+    }
+
+    // 2. Thay đổi trạng thái
+    category.status = !category.status;
+    
+    // 3. Lưu lại
+    await category.save();
+    res.json({ message: "Cập nhật thành công", status: category.status });
+
+  } catch (error) {
+    // Dòng này sẽ in lỗi chi tiết ra Terminal của bạn
+    res.status(500).json({ message: "Lỗi Server", error: error.message });
+  }
+};

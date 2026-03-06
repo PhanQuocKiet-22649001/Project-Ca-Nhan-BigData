@@ -15,10 +15,10 @@ app.use(express.json());
 // ==========================================
 // 2. ROUTES (Định tuyến API)
 // ==========================================
-app.use('/api/users', require('./routes/userRoutes.js')); // Đảm bảo file tên là userRoutes.js
-app.use('/api/categories', require('./routes/categoryRoutes.js')); // Bổ sung dòng này cho Category
-app.use('/api', require('./routes/homeRoutes.js'));
-app.use('/api', require('./routes/authRoutes.js')); // Route Login thật
+app.use('/api/users', require('./routes/userRoutes.js')); // Route thêm user
+app.use('/api/categories', require('./routes/categoryRoutes.js')); // Route thêm danh mục
+app.use('/api', require('./routes/homeRoutes.js'));// Route trang chủ
+app.use('/api', require('./routes/authRoutes.js')); // Route Login 
 
 // app.use('/api/admin', require('./routes/adminRoutes.js')); // Route cho Admin sau này
 

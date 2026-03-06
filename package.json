@@ -1,0 +1,27 @@
+{
+  "name": "project_ca_nhan",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "backend": "cd backend && node server.js",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PhanQuocKiet-22649001/Project-Ca-Nhan-BigData.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/PhanQuocKiet-22649001/Project-Ca-Nhan-BigData/issues"
+  },
+  "homepage": "https://github.com/PhanQuocKiet-22649001/Project-Ca-Nhan-BigData#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
