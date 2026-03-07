@@ -7,5 +7,7 @@ const { identifyUser, requireAdmin } = require('../middlewares/authMiddleware');
 router.post('/add', identifyUser, requireAdmin, categoryController.addCategory);
 // Route PATCH: http://localhost:5000/api/users/status/:id
 router.patch('/status/:id', identifyUser, requireAdmin, categoryController.toggleStatus);
+router.put('/edit/:id', identifyUser, requireAdmin, categoryController.updateCategory);
+
 
 module.exports = router;

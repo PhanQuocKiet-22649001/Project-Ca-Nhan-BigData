@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import '../styles/home.css';
 import DetailModal from '../components/DetailModal';
 import AddModal from '../components/AddModal';
+import EditModal from '../components/EditModal';
 
 function Home() {
   const [tab, setTab] = useState('categories');
@@ -9,8 +10,9 @@ function Home() {
   const [viewItem, setViewItem] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
-  // LẤY ID CỦA NGƯỜI ĐANG ĐĂNG NHẬP TỪ LOCALSTORAGE
   const currentUserId = localStorage.getItem('userId');
 
   const loadData = useCallback(() => {
@@ -29,8 +31,13 @@ function Home() {
     loadData();
   }, [loadData]);
 
+  // HÀM XỬ LÝ KHI NHẤN NÚT SỬA
+  const handleEdit = (item) => {
+    setEditItem(item); // Lưu thông tin mục muốn sửa
+    setShowEdit(true); // Mở Modal sửa
+  };
+
   const toggleStatus = async (id, currentStatus) => {
-    // CHẶN NGAY TẠI HÀM: Nếu cố tình ẩn chính mình ở tab users
     if (tab === 'users' && id === currentUserId) {
       alert("Bạn không thể tự ẩn tài khoản của chính mình!");
       return;
@@ -97,30 +104,42 @@ function Home() {
             <tr><td colSpan="3" className="empty-data-msg">Chưa có dữ liệu...</td></tr>
           ) : (
             data.map(item => {
-              // BIẾN KIỂM TRA: Đây có phải là mình không?
               const isMe = tab === 'users' && item._id === currentUserId;
 
               return (
                 <tr key={item._id} className={item.status === false ? 'status-hidden-row' : ''}>
                   <td>
-                    {item.name || item.uname} 
+                    {item.name || item.uname}
                     {isMe && <span style={{ color: 'blue', fontSize: '12px', marginLeft: '5px' }}>(Tôi)</span>}
                   </td>
                   <td>
                     <button className="btn-outline" onClick={() => setViewItem(item)}>Xem</button>
                     {isLoggedIn && (
                       <>
-                        <button className="btn-outline" style={{ marginLeft: '5px' }}>Sửa</button>
-                        <button 
+                        {/* NÚT SỬA ĐÃ ĐƯỢC GẮN HÀM handleEdit */}
+                        <button
                           className="btn-outline"
                           style={{
                             marginLeft: '5px',
-                            // Nếu là mình thì cho màu xám (#ccc), nếu không thì đỏ/xanh như cũ
+                            // Nếu là tab users và không phải chính mình thì làm mờ nút Sửa
+                            opacity: (tab === 'users' && !isMe) ? 0.5 : 1,
+                            cursor: (tab === 'users' && !isMe) ? 'not-allowed' : 'pointer'
+                          }}
+                          disabled={tab === 'users' && !isMe} // Khóa nút nếu không phải chính mình
+                          onClick={() => handleEdit(item)}
+                          title={tab === 'users' && !isMe ? "Bạn chỉ được sửa mật khẩu của chính mình" : ""}
+                        >
+                          Sửa
+                        </button>
+
+                        <button
+                          className="btn-outline"
+                          style={{
+                            marginLeft: '5px',
                             color: isMe ? '#ccc' : (item.status ? '#dc3545' : '#28a745'),
                             fontWeight: 'bold',
                             cursor: isMe ? 'not-allowed' : 'pointer'
                           }}
-                          // VÔ HIỆU HÓA NÚT BẤM NẾU LÀ CHÍNH MÌNH
                           disabled={isMe}
                           onClick={() => toggleStatus(item._id, item.status)}
                           title={isMe ? "Bạn không thể tự ẩn chính mình" : ""}
@@ -137,8 +156,29 @@ function Home() {
         </tbody>
       </table>
 
-      <DetailModal item={viewItem} tab={tab} isLoggedIn={isLoggedIn} onClose={() => setViewItem(null)} />
-      <AddModal isOpen={showAdd} onClose={() => setShowAdd(false)} tab={tab} onSuccess={loadData} />
+      {/* MODAL CHI TIẾT */}
+      <DetailModal
+        item={viewItem}
+        tab={tab}
+        isLoggedIn={isLoggedIn}
+        onClose={() => setViewItem(null)}
+      />
+
+      {/* MODAL THÊM */}
+      <AddModal
+        isOpen={showAdd}
+        onClose={() => setShowAdd(false)}
+        tab={tab} onSuccess={loadData}
+      />
+
+      {/* MODAL SỬA*/}
+      <EditModal
+        isOpen={showEdit}
+        onClose={() => setShowEdit(false)}
+        tab={tab}
+        item={editItem}
+        onSuccess={loadData}
+      />
     </div>
   );
 }

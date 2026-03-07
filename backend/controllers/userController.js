@@ -45,8 +45,8 @@ exports.toggleStatus = async (req, res) => {
 
     // KIỂM TRA: Nếu ID định ẩn trùng với ID người đang đăng nhập
     if (id === adminId) {
-      return res.status(400).json({ 
-        message: "Bạn không thể tự ẩn/khóa tài khoản của chính mình!" 
+      return res.status(400).json({
+        message: "Bạn không thể tự ẩn/khóa tài khoản của chính mình!"
       });
     }
 
@@ -57,6 +57,35 @@ exports.toggleStatus = async (req, res) => {
     await user.save();
 
     res.json({ message: "Cập nhật thành công", status: user.status });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi Server", error: error.message });
+  }
+};
+
+
+// update
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params; // ID của user định sửa
+    const loggedInUserId = req.user.id; // ID của người đang đăng nhập (từ Token)
+
+    // KIỂM TRA QUYỀN: Chỉ cho phép sửa chính mình
+    if (id !== loggedInUserId) {
+      return res.status(403).json({ 
+        message: "Bạn không có quyền đổi mật khẩu của người khác!" 
+      });
+    }
+
+    const { pass } = req.body;
+    if (!pass) return res.status(400).json({ message: "Vui lòng nhập mật khẩu mới" });
+
+    // Mã hóa mật khẩu
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(pass, salt);
+
+    await User.findByIdAndUpdate(id, { pass: hashedPassword });
+
+    res.json({ message: "Đổi mật khẩu thành công! Hãy đăng nhập lại." });
   } catch (error) {
     res.status(500).json({ message: "Lỗi Server", error: error.message });
   }

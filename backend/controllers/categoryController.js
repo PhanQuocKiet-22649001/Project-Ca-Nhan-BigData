@@ -16,7 +16,7 @@ exports.addCategory = async (req, res) => {
 
         // 3. Kiểm tra trùng lặp
         const existingCat = await Category.findOne({
-            $or: [{ name: name}, { slug: slug }]
+            $or: [{ name: name }, { slug: slug }]
         });
 
         if (existingCat) {
@@ -43,26 +43,66 @@ exports.addCategory = async (req, res) => {
 // cập nhật hiện/ẩn
 // BƯỚC 1: Đảm bảo đã import Model ở đầu file
 exports.toggleStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
+    try {
+        const { id } = req.params;
 
-    // 1. Tìm danh mục
-    const category = await Category.findById(id);
-    
-    if (!category) {
-      console.log("=> Không tìm thấy danh mục với ID:", id);
-      return res.status(404).json({ message: "Không tìm thấy danh mục!" });
+        // 1. Tìm danh mục
+        const category = await Category.findById(id);
+
+        if (!category) {
+            console.log("=> Không tìm thấy danh mục với ID:", id);
+            return res.status(404).json({ message: "Không tìm thấy danh mục!" });
+        }
+
+        // 2. Thay đổi trạng thái
+        category.status = !category.status;
+
+        // 3. Lưu lại
+        await category.save();
+        res.json({ message: "Cập nhật thành công", status: category.status });
+
+    } catch (error) {
+        // Dòng này sẽ in lỗi chi tiết ra Terminal của bạn
+        res.status(500).json({ message: "Lỗi Server", error: error.message });
     }
+};
 
-    // 2. Thay đổi trạng thái
-    category.status = !category.status;
-    
-    // 3. Lưu lại
-    await category.save();
-    res.json({ message: "Cập nhật thành công", status: category.status });
+// Thêm hàm updateCategory
+exports.updateCategory = async (req, res) => {
+    try {
+        const { name, slug } = req.body;
+        const { id } = req.params;
 
-  } catch (error) {
-    // Dòng này sẽ in lỗi chi tiết ra Terminal của bạn
-    res.status(500).json({ message: "Lỗi Server", error: error.message });
-  }
+        // 1. KIỂM TRA TRƯỚC: Tìm xem có danh mục nào khác trùng tên hoặc slug không
+        // Phải đảm bảo danh mục đó KHÔNG PHẢI là chính nó ($ne: id)
+        const existingCategory = await Category.findOne({ 
+            $or: [{ name }, { slug }], 
+            _id: { $ne: id } 
+        });
+
+        if (existingCategory) {
+            return res.status(400).json({ 
+                message: "Tên danh mục hoặc đường dẫn (slug) này đã tồn tại!" 
+            });
+        }
+
+        // 2. Nếu không trùng thì mới tiến hành cập nhật
+        const updatedCategory = await Category.findByIdAndUpdate(
+            id,
+            { name, slug },
+            { returnDocument: 'after' }
+        );
+
+        if (!updatedCategory) {
+            return res.status(404).json({ message: "Không tìm thấy danh mục" });
+        }
+
+        res.json({ message: "Cập nhật danh mục thành công!", data: updatedCategory });
+    } catch (error) {
+        // Dự phòng lỗi Duplicate Key từ Database cấp thấp (code 11000)
+        if (error.code === 11000) {
+            return res.status(400).json({ message: "Danh mục đã tồn tại trong hệ thống!" });
+        }
+        res.status(500).json({ message: "Lỗi Server", error: error.message });
+    }
 };
